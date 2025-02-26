@@ -172,3 +172,5 @@ cython_debug/
 *.vocab
 *.model
 *.keras
+en_train.csv
+normalization_corpus.txt
