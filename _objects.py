@@ -6,7 +6,6 @@ from torch.utils.data import Dataset
 from _functions import pad_sequence, tokenize
 
 
-# Create dataset class
 class TextNormalizationDataset(Dataset):
     def __init__(
         self,
@@ -15,24 +14,21 @@ class TextNormalizationDataset(Dataset):
         output_vocab: dict[str, int],
         max_input_len: int = 50,
         max_output_len: int = 50,
-    ):
+    ) -> None:
         self.df: pd.DataFrame = df
         self.input_vocab: dict[str, int] = input_vocab
         self.output_vocab: dict[str, int] = output_vocab
         self.max_input_len: int = max_input_len
         self.max_output_len: int = max_output_len
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.df)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> dict:
         input_text = self.df.iloc[idx]["before"]
 
-        # For training data, we have 'after' column
-        if "after" in self.df.columns:
-            output_text = self.df.iloc[idx]["after"]
-        else:
-            output_text = ""  # For test data
+        # Only for training data, we have 'after' column
+        output_text = self.df.iloc[idx]["after"] if "after" in self.df.columns else ""
 
         # Tokenize input and output
         input_tokens: list[int] = tokenize(input_text, self.input_vocab)
@@ -56,7 +52,7 @@ class TextNormalizationDataset(Dataset):
         else:
             output_tokens = [self.output_vocab["<pad>"]] * self.max_output_len
 
-        # Always ensure we have an id field
+        # Always making sure that we have an id field
         if "id" in self.df.columns:
             id_val = self.df.iloc[idx]["id"]
         else:
@@ -69,9 +65,10 @@ class TextNormalizationDataset(Dataset):
         }
 
 
-# Create the encoder-decoder model
 class Encoder(nn.Module):
-    def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
+    def __init__(
+        self, input_dim: int, emb_dim: int, hid_dim: int, n_layers: int, dropout: float
+    ) -> None:
         super().__init__()
         self.embedding: nn.Embedding = nn.Embedding(input_dim, emb_dim)
         self.rnn: nn.GRU = nn.GRU(
@@ -80,19 +77,15 @@ class Encoder(nn.Module):
         self.dropout: nn.Dropout = nn.Dropout(dropout)
 
     def forward(self, src):
-        # src: [batch_size, seq_len]
         embedded = self.dropout(self.embedding(src))
-        # embedded: [batch_size, seq_len, emb_dim]
-
         outputs, hidden = self.rnn(embedded)
-        # outputs: [batch_size, seq_len, hid_dim]
-        # hidden: [n_layers, batch_size, hid_dim]
-
         return outputs, hidden
 
 
 class Decoder(nn.Module):
-    def __init__(self, output_dim, emb_dim, hid_dim, n_layers, dropout):
+    def __init__(
+        self, output_dim: int, emb_dim: int, hid_dim: int, n_layers: int, dropout: float
+    ) -> None:
         super().__init__()
         self.output_dim = output_dim
         self.embedding = nn.Embedding(output_dim, emb_dim)
@@ -101,35 +94,23 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input, hidden):
-        # input: [batch_size, 1]
-        # hidden: [n_layers, batch_size, hid_dim]
-
-        input = input.unsqueeze(1)  # [batch_size, 1]
-
+        input = input.unsqueeze(1)
         embedded = self.dropout(self.embedding(input))
-        # embedded: [batch_size, 1, emb_dim]
-
         output, hidden = self.rnn(embedded, hidden)
-        # output: [batch_size, 1, hid_dim]
-        # hidden: [n_layers, batch_size, hid_dim]
-
         prediction = self.fc_out(output.squeeze(1))
-        # prediction: [batch_size, output_dim]
-
         return prediction, hidden
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, encoder: Encoder, decoder: Decoder, device: torch.device):
+    def __init__(
+        self, encoder: Encoder, decoder: Decoder, device: torch.device
+    ) -> None:
         super().__init__()
         self.encoder: Encoder = encoder
         self.decoder: Decoder = decoder
         self.device: torch.device = device
 
     def forward(self, src, trg, teacher_forcing_ratio: float = 0.5):
-        # src: [batch_size, src_len]
-        # trg: [batch_size, trg_len]
-
         batch_size = trg.shape[0]
         trg_len = trg.shape[1]
         trg_vocab_size = self.decoder.output_dim

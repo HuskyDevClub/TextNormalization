@@ -1,36 +1,32 @@
-from collections import Counter
-
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
 
 
 # Create vocabulary for input and output sequence
-def build_vocab(texts: pd.Series, min_freq: int = 2) -> dict[str, int]:
-    counter: Counter = Counter()
-    for text in texts:
-        counter.update(text)
+def build_vocab(texts: pd.Series) -> dict[str, int]:
     vocab: dict[str, int] = {
         "<pad>": 0,
         "<unk>": 1,
         "<sos>": 2,
         "<eos>": 3,
     }
-    for char, count in counter.items():
-        if count >= min_freq:
-            vocab[char] = len(vocab)
+    for text in texts:
+        for c in text:
+            if c not in vocab:
+                vocab[c] = len(vocab)
     return vocab
 
 
 # Tokenization function
 def tokenize(text: str, vocab: dict[str, int]) -> list[int]:
-    return [vocab.get(char, vocab["<unk>"]) for char in text]
+    return [vocab.get(c, vocab["<unk>"]) for c in text]
 
 
 # Function to pad sequences to the same length
 def pad_sequence(
-    sequences: list[list[int]], max_len: int, padding_value: int = 0
+    sequences: list[list[int]], max_len: int, padding_value: int
 ) -> list[list[int]]:
+    # Output sequences
     padded_sequences: list[list[int]] = []
     for seq in sequences:
         if len(seq) < max_len:
@@ -55,22 +51,3 @@ def plot_result(train_losses: list[float], valid_losses: list[float]) -> None:
     plt.grid(True)
     plt.savefig("training_loss.png")
     plt.close()
-
-
-# prepare the data
-def prepare_data(path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    # Load data and create train/test split
-    df: pd.DataFrame = pd.read_csv(path)
-
-    # Create id column if it doesn't exist (combining sentence_id and token_id)
-    if (
-        "id" not in df.columns
-        and "sentence_id" in df.columns
-        and "token_id" in df.columns
-    ):
-        df["id"] = df["sentence_id"].astype(str) + "_" + df["token_id"].astype(str)
-    # If no id column exists at all, create a simple index as id
-    elif "id" not in df.columns:
-        df["id"] = df.index.astype(str)
-
-    return train_test_split(df, test_size=0.2, random_state=42)
