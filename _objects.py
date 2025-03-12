@@ -71,7 +71,7 @@ class Encoder(nn.Module):
     ) -> None:
         super().__init__()
         self.embedding: nn.Embedding = nn.Embedding(input_dim, emb_dim)
-        self.rnn: nn.GRU = nn.GRU(
+        self.rnn: nn.LSTM = nn.LSTM(
             emb_dim, hid_dim, n_layers, dropout=dropout, batch_first=True
         )
         self.dropout: nn.Dropout = nn.Dropout(dropout)
@@ -89,7 +89,9 @@ class Decoder(nn.Module):
         super().__init__()
         self.output_dim = output_dim
         self.embedding = nn.Embedding(output_dim, emb_dim)
-        self.rnn = nn.GRU(emb_dim, hid_dim, n_layers, dropout=dropout, batch_first=True)
+        self.rnn = nn.LSTM(
+            emb_dim, hid_dim, n_layers, dropout=dropout, batch_first=True
+        )
         self.fc_out = nn.Linear(hid_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
 
