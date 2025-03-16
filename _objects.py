@@ -12,8 +12,8 @@ class TextNormalizationDataset(Dataset):
         df: pd.DataFrame,
         input_vocab: dict[str, int],
         output_vocab: dict[str, int],
-        max_input_len: int = 50,
-        max_output_len: int = 50,
+        max_input_len: int = 32,
+        max_output_len: int = 64,
     ) -> None:
         self.df: pd.DataFrame = df
         self.input_vocab: dict[str, int] = input_vocab
