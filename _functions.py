@@ -51,3 +51,15 @@ def plot_result(train_losses: list[float], valid_losses: list[float]) -> None:
     plt.grid(True)
     plt.savefig("training_loss.png")
     plt.close()
+
+
+# add sentence_id and token_id column to id column
+def convert_df_id(df: pd.DataFrame) -> pd.DataFrame:
+    # create id column
+    col: pd.Series = df["sentence_id"].astype(str) + "_" + df["token_id"].astype(str)
+    # drop sentence_id and token_id
+    df = df.drop(columns=["sentence_id", "token_id"])
+    # assign id column to the "new" data frame
+    df["id"] = col
+
+    return df

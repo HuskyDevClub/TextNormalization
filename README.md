@@ -86,7 +86,7 @@ This project was created as a class assignment. If you use any part of this code
 
 ## References
 
-Here is some code I incorporated while developing my solution:
+Here is some code we examined and incorporated while developing my solution:
 
 - Text tokenized and General Code Structure: https://github.com/bentrevett/pytorch-seq2seq 
 - The Seq2Seq-Encoder-Decoder Model: https://github.com/312shan/Text-Normalization-in-pyTorch
