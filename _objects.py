@@ -53,10 +53,7 @@ class TextNormalizationDataset(Dataset):
             output_tokens = [self.output_vocab["<pad>"]] * self.max_output_len
 
         # Always making sure that we have an id field
-        if "id" in self.df.columns:
-            id_val = self.df.iloc[idx]["id"]
-        else:
-            id_val = str(idx)
+        id_val: str = self.df.iloc[idx]["id"] if "id" in self.df.columns else str(idx)
 
         return {
             "input": torch.tensor(input_tokens, dtype=torch.long),
